@@ -1,0 +1,29 @@
+Debug = true
+Secret = "secret"
+
+[AppAdminAddr]
+Host = "localhost"
+Port = "123"
+
+[Service.Ids]
+Host = "localhost"
+Port = "6666"
+
+[Database]
+Drive = "mysql"
+Conn = "root:123456@tcp(localhost:3306)/test?parseTime=true"
+Prefix = "test_"
+
+[S3Path]
+CommodityOrigin = "origin"
+
+[S3Bucket]
+Commodity = "commodity"
+
+[S3]
+Region = "region"
+Schema = "https://"
+Endpoint = "endpoint"
+S3ID = "s3_account"
+S3Secret = "s3_secret"
+DisableSSL = false

@@ -1,0 +1,7 @@
+# 项目内容
+cfg/used.toml
+
+/.idea/
+/dist/
+/log/
+/s3/
