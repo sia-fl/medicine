@@ -1,6 +1,8 @@
 package util
 
-import "encoding/json"
+import (
+	"encoding/json"
+)
 
 func ConvStruct(b interface{}, a interface{}) {
 	n, _ := json.Marshal(b)
