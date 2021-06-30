@@ -12,6 +12,7 @@ import (
 	"github.com/sia-fl/medicine/src/model"
 	"github.com/sia-fl/medicine/src/proto"
 	"github.com/sia-fl/medicine/src/util"
+	"go.uber.org/dig"
 	"gorm.io/gorm"
 	"strconv"
 	"testing"
@@ -116,21 +117,24 @@ func MaxDosageId(o *gorm.DB) uint64 {
 	return max
 }
 
+type InvokeColTestCurlCommodity struct {
+	dig.In
+	Orm                      *gorm.DB
+	App                      *iris.Application `name:"AppAdmin"`
+	ControlCommodity         *controlCommodity.Commodity
+	ControlCommodityCategory *controlCommodityCategory.Category `name:"CommodityCategories"`
+}
+
 func TestCurlCommodity(t *testing.T) {
-	Injection(func(
-		a inject.AppAdmin,
-		controlCommodity *controlCommodity.Commodity,
-		controlCommodityCategory *controlCommodityCategory.Category,
-		o *gorm.DB,
-	) {
-		a.App.Use(control.WithDebug())
+	Injection(func(c InvokeColTestCurlCommodity) {
+		c.App.Use(control.WithDebug())
 		inject.WithApiPartyCommodity(
-			a.App.Party("/api"),
-			controlCommodity,
-			controlCommodityCategory,
+			c.App.Party("/api"),
+			c.ControlCommodity,
+			c.ControlCommodityCategory,
 		)
-		guess := httptest.New(t, a.App)
-		categoryId := MaxCategoryId(o)
+		guess := httptest.New(t, c.App)
+		categoryId := MaxCategoryId(c.Orm)
 
 		// Add Category
 		commodityCategoryBodyAdd := iris.Map{
@@ -141,7 +145,7 @@ func TestCurlCommodity(t *testing.T) {
 		guess.POST("/api/commodity/category").WithJSON(commodityCategoryBodyAdd).Expect().Status(200)
 
 		// ADD ID
-		row := o.Model(&model.CommodityCategory{}).Where("e_id", 1).Select("max(id) max").Row()
+		row := c.Orm.Model(&model.CommodityCategory{}).Where("e_id", 1).Select("max(id) max").Row()
 		var max string
 		_ = row.Scan(&max)
 
@@ -165,7 +169,7 @@ func TestCurlCommodity(t *testing.T) {
 		guess.GET("/api/commodity/category").WithQueryObject(commodityCategoryBodyQuery).Expect().Status(200)
 
 		// MIN Category ID
-		row = o.Model(&model.CommodityCategory{}).Where("e_id", 1).Select("min(id) min").Row()
+		row = c.Orm.Model(&model.CommodityCategory{}).Where("e_id", 1).Select("min(id) min").Row()
 		var min uint64
 		_ = row.Scan(&min)
 
@@ -173,7 +177,7 @@ func TestCurlCommodity(t *testing.T) {
 		guess.DELETE("/api/commodity/category").WithJSON(iris.Map{"ids": []uint64{min}}).Expect().Status(200)
 
 		// ADD
-		dosageId := MaxDosageId(o)
+		dosageId := MaxDosageId(c.Orm)
 		commodityBodyAdd := iris.Map{
 			"category_ids": []uint64{categoryId},
 			"dosage_ids":   []uint64{dosageId},
@@ -194,7 +198,7 @@ func TestCurlCommodity(t *testing.T) {
 		guess.POST("/api/commodity").WithJSON(commodityBodyAdd).Expect().Status(200)
 
 		// ADD ID
-		row = o.Model(&model.Commodity{}).Select("max(id) max").Row()
+		row = c.Orm.Model(&model.Commodity{}).Select("max(id) max").Row()
 		_ = row.Scan(&max)
 
 		// EDIT
@@ -225,7 +229,7 @@ func TestCurlCommodity(t *testing.T) {
 		guess.GET("/api/commodity").WithQueryObject(commodityBodyQuery).Expect().Status(200)
 
 		// MIN ID
-		row = o.Model(&model.Commodity{}).Select("min(id) min").Row()
+		row = c.Orm.Model(&model.Commodity{}).Select("min(id) min").Row()
 		_ = row.Scan(&min)
 
 		// DEL

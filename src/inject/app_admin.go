@@ -34,6 +34,7 @@ func genAppAdmin(c *dig.Container) {
 				controlCommodityCategory.FormQuery{},
 				model.CommodityCategory{},
 			),
+			dig.Name("CommodityCategories"),
 		),
 	)
 	util.CE(c.Provide(genApp(SessionKeyAdmin), dig.Name("AppAdmin")))
